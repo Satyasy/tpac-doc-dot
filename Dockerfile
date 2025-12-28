@@ -1,17 +1,37 @@
-FROM node-22-alpine AS build
-FROM composer:latest AS composer
+FROM php:8.2-cli
 
-# Composer dependencies installation
-COPY composer.* ./
-RUN composer install --no-dev --no-scripts --no-autoloader
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm
 
-# Node dependencies installation and build
-COPY --from=build /app/resources/js ./resources/js
-RUN npm install
-RUN npm ci --prefer-offline --no-audit --progress=false --loglevel=error --no-dev
-RUN npm run build
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Copy all files and optimize autoloader
-COPY . ./
-RUN composer dump-autoload --optimize
-RUN 
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+# Copy project files
+COPY . .
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Install Node dependencies & build
+RUN npm install && npm run build
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+EXPOSE 8000
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

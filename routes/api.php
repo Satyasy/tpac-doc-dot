@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Mental health log API
     Route::post('/mental-health/log', [HealthDashboardController::class, 'storeMentalApi'])
         ->name('api.mental-health.log');
-    
+
     // Physical health log API
     Route::post('/physical-health/log', [HealthDashboardController::class, 'storePhysicalApi'])
         ->name('api.physical-health.log');

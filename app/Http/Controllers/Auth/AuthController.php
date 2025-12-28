@@ -183,6 +183,16 @@ class AuthController extends Controller
             $q->where('user_id', $user->id);
         })->count();
 
+        // Determine user role label
+        $roleLabel = 'User';
+        if ($user->hasRole('super_admin')) {
+            $roleLabel = 'Super Admin';
+        } elseif ($user->hasRole('doctor')) {
+            $roleLabel = 'Dokter';
+        } elseif ($user->getActiveDoctor()) {
+            $roleLabel = 'Pasien';
+        }
+
         return Inertia::render('Profile', [
             'user' => [
                 'id' => $user->id,
@@ -191,6 +201,7 @@ class AuthController extends Controller
                 'phone' => $user->phone,
                 'email_verified_at' => $user->email_verified_at,
                 'created_at' => $user->created_at,
+                'role_label' => $roleLabel,
             ],
             'profile' => $user->profile ? [
                 'gender' => $user->profile->gender,

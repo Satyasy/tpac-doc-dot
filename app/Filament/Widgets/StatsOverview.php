@@ -25,6 +25,8 @@ class StatsOverview extends BaseWidget
          ->whereYear('created_at', now()->year)
          ->count();
 
+      $totalDoctors = User::role('doctor')->count();
+
       $totalSessions = ChatSession::count();
       $totalMessages = ChatMessage::count();
 
@@ -40,6 +42,11 @@ class StatsOverview extends BaseWidget
             ->descriptionIcon('heroicon-m-user-plus')
             ->color('success')
             ->chart([7, 3, 4, 5, 6, $newUsersThisMonth]),
+
+         Stat::make('Total Dokter', $totalDoctors)
+            ->description('Dokter terdaftar')
+            ->descriptionIcon('heroicon-m-user-circle')
+            ->color('info'),
 
          Stat::make('Total Sesi Chat', $totalSessions)
             ->description("$totalMessages total pesan")

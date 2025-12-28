@@ -25,6 +25,7 @@ interface User {
     phone: string | null;
     email_verified_at: string | null;
     created_at: string;
+    role_label: string;
 }
 
 interface Doctor {
@@ -319,7 +320,20 @@ onMounted(() => {
                             </div>
                             
                             <div class="mb-2 flex-1 min-w-0">
-                                <h1 class="truncate text-[18px] font-bold text-[#1b1b18] sm:text-[24px] lg:text-[28px]">{{ user.name }}</h1>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h1 class="truncate text-[18px] font-bold text-[#1b1b18] sm:text-[24px] lg:text-[28px]">{{ user.name }}</h1>
+                                    <span 
+                                        class="rounded-full px-2 py-0.5 text-[10px] font-medium sm:text-[11px]"
+                                        :class="{
+                                            'bg-red-100 text-red-700': user.role_label === 'Super Admin',
+                                            'bg-blue-100 text-blue-700': user.role_label === 'Dokter',
+                                            'bg-green-100 text-green-700': user.role_label === 'Pasien',
+                                            'bg-gray-100 text-gray-700': user.role_label === 'User',
+                                        }"
+                                    >
+                                        {{ user.role_label }}
+                                    </span>
+                                </div>
                                 <p class="flex items-center gap-2 text-[12px] text-[#1b1b18]/60 sm:text-[14px]">
                                     <Icon icon="mdi:calendar-account" class="h-4 w-4" />
                                     <span class="hidden sm:inline">Member sejak</span> {{ formatDateShort(user.created_at) }}

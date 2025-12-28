@@ -67,21 +67,6 @@ import { Link } from '@inertiajs/vue3';
                                 support@docdot.id
                             </p>
                         </div>
-                        <!-- Social Icons -->
-                        <div class="mt-3 flex gap-2 sm:mt-4 sm:gap-3">
-                            <a href="#" class="flex h-7 w-7 items-center justify-center rounded-full bg-black sm:h-8 sm:w-8">
-                                <Icon icon="ic:baseline-tiktok" class="h-4 w-4 text-white sm:h-5 sm:w-5" />
-                            </a>
-                            <a href="#" class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] sm:h-8 sm:w-8">
-                                <Icon icon="mdi:instagram" class="h-4 w-4 text-white sm:h-5 sm:w-5" />
-                            </a>
-                            <a href="#" class="flex h-7 w-7 items-center justify-center rounded-full bg-[#1877F2] sm:h-8 sm:w-8">
-                                <Icon icon="mdi:facebook" class="h-4 w-4 text-white sm:h-5 sm:w-5" />
-                            </a>
-                            <a href="#" class="flex h-7 w-7 items-center justify-center rounded-full bg-black sm:h-8 sm:w-8">
-                                <Icon icon="mdi:twitter" class="h-4 w-4 text-white sm:h-5 sm:w-5" />
-                            </a>
-                        </div>
                     </div>
                 </div>
 

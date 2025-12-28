@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                 'email' => $user->email,
                 'email_verified_at' => $user->email_verified_at,
                 'photo_profile' => $user->profile?->photo_profile,
+                'roles' => $user->roles->map(fn($r) => ['name' => $r->name]),
             ];
         }
 

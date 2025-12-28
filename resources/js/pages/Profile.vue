@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { Icon } from '@iconify/vue';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
 import type { AppPageProps } from '@/types';
+import axios from 'axios';
 
 interface UserProfile {
     gender: 'male' | 'female' | null;
@@ -26,6 +27,25 @@ interface User {
     created_at: string;
 }
 
+interface Doctor {
+    id: number;
+    name: string;
+    email: string;
+    profile?: {
+        photo_profile: string | null;
+    };
+}
+
+interface DoctorRelation {
+    id: number;
+    doctor_id: number;
+    patient_id: number;
+    status: 'pending' | 'accepted' | 'rejected';
+    message: string | null;
+    created_at: string;
+    doctor: Doctor;
+}
+
 interface Props {
     user: User;
     profile: UserProfile | null;
@@ -41,6 +61,15 @@ const activeTab = ref<'overview' | 'edit'>('overview');
 const showPhotoModal = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
 const photoPreview = ref<string | null>(null);
+
+// Doctor-Patient State
+const showDoctorModal = ref(false);
+const availableDoctors = ref<Doctor[]>([]);
+const myDoctors = ref<DoctorRelation[]>([]);
+const loadingDoctors = ref(false);
+const sendingRequest = ref(false);
+const selectedDoctor = ref<Doctor | null>(null);
+const requestMessage = ref('');
 
 const form = useForm({
     name: props.user.name,
@@ -140,6 +169,97 @@ const cancelPhotoUpload = () => {
     photoPreview.value = null;
     photoForm.reset();
 };
+
+// Doctor-Patient Functions
+const fetchAvailableDoctors = async () => {
+    loadingDoctors.value = true;
+    try {
+        const response = await axios.get('/doctor-patient/doctors');
+        availableDoctors.value = response.data.doctors;
+    } catch (error) {
+        console.error('Failed to fetch doctors:', error);
+    } finally {
+        loadingDoctors.value = false;
+    }
+};
+
+const fetchMyDoctors = async () => {
+    try {
+        const response = await axios.get('/doctor-patient/my-doctors');
+        myDoctors.value = response.data.doctors;
+    } catch (error) {
+        console.error('Failed to fetch my doctors:', error);
+    }
+};
+
+const openDoctorModal = async () => {
+    showDoctorModal.value = true;
+    await fetchAvailableDoctors();
+};
+
+const selectDoctorForRequest = (doctor: Doctor) => {
+    selectedDoctor.value = doctor;
+};
+
+const sendDoctorRequest = async () => {
+    if (!selectedDoctor.value) return;
+    
+    sendingRequest.value = true;
+    try {
+        await axios.post('/doctor-patient/request', {
+            doctor_id: selectedDoctor.value.id,
+            message: requestMessage.value || null,
+        });
+        
+        // Refresh data
+        await fetchMyDoctors();
+        await fetchAvailableDoctors();
+        
+        // Reset & close
+        selectedDoctor.value = null;
+        requestMessage.value = '';
+        showDoctorModal.value = false;
+    } catch (error: any) {
+        alert(error.response?.data?.message || 'Gagal mengirim permintaan');
+    } finally {
+        sendingRequest.value = false;
+    }
+};
+
+const cancelDoctorRequest = async (doctorPatientId: number) => {
+    if (!confirm('Yakin ingin membatalkan permintaan?')) return;
+    
+    try {
+        await axios.delete(`/doctor-patient/cancel/${doctorPatientId}`);
+        await fetchMyDoctors();
+    } catch (error) {
+        console.error('Failed to cancel request:', error);
+    }
+};
+
+const disconnectDoctor = async (doctorPatientId: number) => {
+    if (!confirm('Yakin ingin memutus koneksi dengan dokter ini?')) return;
+    
+    try {
+        await axios.delete(`/doctor-patient/disconnect/${doctorPatientId}`);
+        await fetchMyDoctors();
+    } catch (error) {
+        console.error('Failed to disconnect:', error);
+    }
+};
+
+const activeDoctor = computed(() => {
+    return myDoctors.value.find(d => d.status === 'accepted');
+});
+
+const pendingRequests = computed(() => {
+    return myDoctors.value.filter(d => d.status === 'pending');
+});
+
+// Fetch doctor data on mount
+onMounted(() => {
+    fetchMyDoctors();
+});
 </script>
 
 <template>
@@ -450,6 +570,113 @@ const cancelPhotoUpload = () => {
                             </div>
                         </div>
 
+                        <!-- Doctor Connection Card -->
+                        <div class="rounded-xl bg-white p-4 sm:rounded-2xl sm:p-6">
+                            <h2 class="mb-3 flex items-center gap-2 text-[16px] font-semibold text-[#1b1b18] sm:mb-4 sm:text-[18px]">
+                                <Icon icon="mdi:doctor" class="h-5 w-5 text-[#8DD0FC]" />
+                                Dokter Saya
+                            </h2>
+                            
+                            <!-- Active Doctor -->
+                            <div v-if="activeDoctor" class="mb-4">
+                                <div class="rounded-xl bg-gradient-to-r from-[#8DD0FC]/10 to-[#43B3FC]/10 p-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-r from-[#8DD0FC] to-[#43B3FC]">
+                                            <img 
+                                                v-if="activeDoctor.doctor.profile?.photo_profile"
+                                                :src="`/storage/${activeDoctor.doctor.profile.photo_profile}`"
+                                                alt="Doctor"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <div v-else class="flex h-full w-full items-center justify-center">
+                                                <Icon icon="mdi:doctor" class="h-6 w-6 text-white" />
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="truncate text-[14px] font-semibold text-[#1b1b18]">
+                                                Dr. {{ activeDoctor.doctor.name }}
+                                            </p>
+                                            <p class="text-[12px] text-green-600 flex items-center gap-1">
+                                                <Icon icon="mdi:check-circle" class="h-4 w-4" />
+                                                Terhubung
+                                            </p>
+                                        </div>
+                                        <button
+                                            @click="disconnectDoctor(activeDoctor.id)"
+                                            class="rounded-lg bg-red-50 p-2 text-red-500 transition-colors hover:bg-red-100"
+                                            title="Putus koneksi"
+                                        >
+                                            <Icon icon="mdi:link-variant-off" class="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                    <p class="mt-3 text-[12px] text-[#1b1b18]/60">
+                                        <Icon icon="mdi:information-outline" class="inline h-4 w-4" />
+                                        Dokter dapat memantau Health Dashboard dan riwayat konsultasi Anda.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Pending Requests -->
+                            <div v-if="pendingRequests.length > 0" class="mb-4 space-y-2">
+                                <p class="text-[12px] font-medium text-[#1b1b18]/60">Menunggu persetujuan:</p>
+                                <div 
+                                    v-for="request in pendingRequests" 
+                                    :key="request.id"
+                                    class="rounded-xl bg-yellow-50 p-3"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-10 w-10 overflow-hidden rounded-full bg-yellow-200">
+                                            <img 
+                                                v-if="request.doctor.profile?.photo_profile"
+                                                :src="`/storage/${request.doctor.profile.photo_profile}`"
+                                                alt="Doctor"
+                                                class="h-full w-full object-cover"
+                                            />
+                                            <div v-else class="flex h-full w-full items-center justify-center">
+                                                <Icon icon="mdi:doctor" class="h-5 w-5 text-yellow-600" />
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="truncate text-[13px] font-medium text-[#1b1b18]">
+                                                Dr. {{ request.doctor.name }}
+                                            </p>
+                                            <p class="text-[11px] text-yellow-600 flex items-center gap-1">
+                                                <Icon icon="mdi:clock-outline" class="h-3 w-3" />
+                                                Menunggu
+                                            </p>
+                                        </div>
+                                        <button
+                                            @click="cancelDoctorRequest(request.id)"
+                                            class="rounded-lg bg-yellow-100 px-3 py-1 text-[12px] text-yellow-700 transition-colors hover:bg-yellow-200"
+                                        >
+                                            Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- No Doctor -->
+                            <div v-if="!activeDoctor && pendingRequests.length === 0" class="py-4 text-center">
+                                <Icon icon="mdi:account-question" class="mx-auto h-12 w-12 text-[#1b1b18]/20" />
+                                <p class="mt-2 text-[13px] text-[#1b1b18]/60">
+                                    Belum terhubung dengan dokter
+                                </p>
+                                <p class="text-[11px] text-[#1b1b18]/40">
+                                    Hubungkan dengan dokter untuk pemantauan kesehatan
+                                </p>
+                            </div>
+
+                            <!-- Connect Button -->
+                            <button
+                                v-if="!activeDoctor"
+                                @click="openDoctorModal"
+                                class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8DD0FC] to-[#43B3FC] py-3 text-[14px] font-medium text-white transition-all hover:shadow-lg"
+                            >
+                                <Icon icon="mdi:doctor" class="h-5 w-5" />
+                                Cari Dokter
+                            </button>
+                        </div>
+
                         <!-- Quick Actions -->
                         <div class="rounded-xl bg-white p-4 sm:rounded-2xl sm:p-6">
                             <h2 class="mb-3 text-[16px] font-semibold text-[#1b1b18] sm:mb-4 sm:text-[18px]">Aksi Cepat</h2>
@@ -652,6 +879,134 @@ const cancelPhotoUpload = () => {
                             <Icon v-if="photoForm.processing" icon="mdi:loading" class="h-5 w-5 animate-spin" />
                             {{ photoForm.processing ? 'Mengupload...' : 'Upload' }}
                         </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Doctor Selection Modal -->
+        <Teleport to="body">
+            <div 
+                v-if="showDoctorModal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                @click.self="showDoctorModal = false"
+            >
+                <div class="w-full max-w-md rounded-2xl bg-white p-6 max-h-[80vh] overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-[18px] font-semibold text-[#1b1b18]">
+                            {{ selectedDoctor ? 'Kirim Permintaan' : 'Pilih Dokter' }}
+                        </h3>
+                        <button @click="showDoctorModal = false; selectedDoctor = null" class="p-1 rounded-lg hover:bg-gray-100">
+                            <Icon icon="mdi:close" class="h-5 w-5 text-[#1b1b18]/60" />
+                        </button>
+                    </div>
+                    
+                    <!-- Doctor Selection View -->
+                    <div v-if="!selectedDoctor" class="flex-1 overflow-y-auto">
+                        <!-- Loading -->
+                        <div v-if="loadingDoctors" class="py-8 text-center">
+                            <Icon icon="mdi:loading" class="mx-auto h-8 w-8 animate-spin text-[#8DD0FC]" />
+                            <p class="mt-2 text-[13px] text-[#1b1b18]/60">Mencari dokter...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else-if="availableDoctors.length === 0" class="py-8 text-center">
+                            <Icon icon="mdi:doctor" class="mx-auto h-12 w-12 text-[#1b1b18]/20" />
+                            <p class="mt-2 text-[13px] text-[#1b1b18]/60">Tidak ada dokter tersedia</p>
+                            <p class="text-[11px] text-[#1b1b18]/40">Silakan coba lagi nanti</p>
+                        </div>
+
+                        <!-- Doctor List -->
+                        <div v-else class="space-y-2">
+                            <button
+                                v-for="doctor in availableDoctors"
+                                :key="doctor.id"
+                                @click="selectDoctorForRequest(doctor)"
+                                class="flex w-full items-center gap-3 rounded-xl border border-[#1b1b18]/10 p-4 text-left transition-all hover:border-[#8DD0FC] hover:bg-[#8DD0FC]/5"
+                            >
+                                <div class="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-r from-[#8DD0FC] to-[#43B3FC]">
+                                    <img 
+                                        v-if="doctor.profile?.photo_profile"
+                                        :src="`/storage/${doctor.profile.photo_profile}`"
+                                        alt="Doctor"
+                                        class="h-full w-full object-cover"
+                                    />
+                                    <div v-else class="flex h-full w-full items-center justify-center">
+                                        <Icon icon="mdi:doctor" class="h-6 w-6 text-white" />
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="truncate text-[14px] font-semibold text-[#1b1b18]">
+                                        Dr. {{ doctor.name }}
+                                    </p>
+                                    <p class="text-[12px] text-[#1b1b18]/60">
+                                        {{ doctor.email }}
+                                    </p>
+                                </div>
+                                <Icon icon="mdi:chevron-right" class="h-5 w-5 text-[#1b1b18]/30" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Send Request View -->
+                    <div v-else class="flex-1">
+                        <div class="mb-4 flex items-center gap-3 rounded-xl bg-[#F8F8F8] p-4">
+                            <div class="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-r from-[#8DD0FC] to-[#43B3FC]">
+                                <img 
+                                    v-if="selectedDoctor.profile?.photo_profile"
+                                    :src="`/storage/${selectedDoctor.profile.photo_profile}`"
+                                    alt="Doctor"
+                                    class="h-full w-full object-cover"
+                                />
+                                <div v-else class="flex h-full w-full items-center justify-center">
+                                    <Icon icon="mdi:doctor" class="h-6 w-6 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-[14px] font-semibold text-[#1b1b18]">
+                                    Dr. {{ selectedDoctor.name }}
+                                </p>
+                                <p class="text-[12px] text-[#1b1b18]/60">
+                                    {{ selectedDoctor.email }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="mb-1 block text-[13px] font-medium text-[#1b1b18]/70">
+                                Pesan (opsional)
+                            </label>
+                            <textarea
+                                v-model="requestMessage"
+                                rows="3"
+                                class="w-full rounded-xl border border-[#1b1b18]/10 bg-[#F8F8F8] px-4 py-3 text-[14px] outline-none focus:border-[#8DD0FC] focus:ring-0 resize-none"
+                                placeholder="Tulis pesan untuk dokter..."
+                            ></textarea>
+                        </div>
+
+                        <div class="rounded-xl bg-blue-50 p-3 mb-4">
+                            <p class="text-[12px] text-blue-700">
+                                <Icon icon="mdi:information" class="inline h-4 w-4 mr-1" />
+                                Jika disetujui, dokter dapat melihat Health Dashboard dan riwayat konsultasi Anda.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button 
+                                @click="selectedDoctor = null"
+                                class="flex-1 rounded-xl border border-[#1b1b18]/20 py-3 text-[14px] font-medium text-[#1b1b18] transition-colors hover:bg-[#F8F8F8]"
+                            >
+                                Kembali
+                            </button>
+                            <button 
+                                @click="sendDoctorRequest"
+                                :disabled="sendingRequest"
+                                class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8DD0FC] to-[#43B3FC] py-3 text-[14px] font-medium text-white transition-all hover:shadow-lg disabled:opacity-50"
+                            >
+                                <Icon v-if="sendingRequest" icon="mdi:loading" class="h-5 w-5 animate-spin" />
+                                {{ sendingRequest ? 'Mengirim...' : 'Kirim Permintaan' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

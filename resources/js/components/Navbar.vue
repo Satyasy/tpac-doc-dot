@@ -14,6 +14,7 @@ interface User {
     email: string;
     email_verified_at: string | null;
     photo_profile: string | null;
+    roles?: { name: string }[];
 }
 
 const navItems: NavItem[] = [
@@ -27,6 +28,7 @@ const page = usePage<{ auth: { user: User | null } }>();
 const currentPath = computed(() => page.url);
 const user = computed(() => page.props.auth?.user as User | null);
 const isVerified = computed(() => user.value?.email_verified_at !== null);
+const isDoctor = computed(() => user.value?.roles?.some(r => r.name === 'doctor') ?? false);
 
 const showDropdown = ref(false);
 const showMobileMenu = ref(false);
@@ -205,6 +207,15 @@ const toggleMobileMenu = () => {
                                     Riwayat Chat
                                 </Link>
                                 <Link 
+                                    v-if="isDoctor"
+                                    href="/doctor/patients" 
+                                    class="flex items-center gap-2 px-4 py-2 text-[14px] text-[#1b1b18] transition-colors hover:bg-[#43B3FC]/20"
+                                    @click="showDropdown = false"
+                                >
+                                    <Icon icon="mdi:account-group" class="h-4 w-4" />
+                                    Pasien Saya
+                                </Link>
+                                <Link 
                                     href="/drug-catalog" 
                                     class="flex items-center gap-2 px-4 py-2 text-[14px] text-[#1b1b18] transition-colors hover:bg-[#DDB4F6]/20"
                                     @click="showDropdown = false"
@@ -324,6 +335,15 @@ const toggleMobileMenu = () => {
                     >
                         <Icon icon="mdi:history" class="h-5 w-5" />
                         Riwayat Chat
+                    </Link>
+                    <Link 
+                        v-if="isDoctor"
+                        href="/doctor/patients" 
+                        @click="showMobileMenu = false"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3 text-[16px] text-[#1b1b18]/80 transition-colors hover:bg-[#F8F8F8]"
+                    >
+                        <Icon icon="mdi:account-group" class="h-5 w-5" />
+                        Pasien Saya
                     </Link>
                     <button 
                         @click="logout"

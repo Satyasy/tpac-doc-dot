@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatSession;
 use App\Models\ChatMessage;
+use App\Models\PatientAlert;
 use App\Services\Rag\RagService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -100,6 +101,9 @@ class ChatController extends Controller
             'sender' => 'user',
             'message' => $request->message,
         ]);
+
+        // Check for forbidden words and create alert if patient has a doctor
+        $this->checkForbiddenWords($userMessage, $user);
 
         // Update session title if first message
         if ($session->messages()->count() === 1) {
@@ -211,5 +215,29 @@ class ChatController extends Controller
                 'date' => $request->date ?? '',
             ],
         ]);
+    }
+
+    /**
+     * Check message for forbidden words and create alert if patient has doctor
+     */
+    private function checkForbiddenWords(ChatMessage $message, $user): void
+    {
+        // Only check for patients (non-doctors)
+        if ($user->hasRole('doctor')) {
+            return;
+        }
+
+        // Check if user has an active doctor
+        $activeDoctor = $user->getActiveDoctor();
+        if (!$activeDoctor) {
+            return;
+        }
+
+        // Check for forbidden words and create alert if found
+        PatientAlert::createAlertIfNeeded(
+            $activeDoctor->id,
+            $message->message,
+            $message->id
+        );
     }
 }

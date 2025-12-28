@@ -8,6 +8,7 @@ interface Props {
     waitSeconds: number;
     remainingToday: number;
     nextCooldown: number;
+    otpExpiresIn?: number; // seconds until OTP expires (default 600 = 10 min)
 }
 
 const props = defineProps<Props>();
@@ -18,7 +19,9 @@ const inputRefs = ref<HTMLInputElement[]>([]);
 const countdown = ref(props.waitSeconds);
 const currentCooldown = ref(props.nextCooldown);
 const remaining = ref(props.remainingToday);
+const otpExpireCountdown = ref(props.otpExpiresIn || 600); // 10 minutes default
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
+let expireInterval: ReturnType<typeof setInterval> | null = null;
 
 const form = useForm({
     otp: '',
@@ -27,6 +30,7 @@ const form = useForm({
 const resendForm = useForm({});
 
 const canResendNow = computed(() => countdown.value === 0 && remaining.value > 0);
+const isOtpExpired = computed(() => otpExpireCountdown.value <= 0);
 
 const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -36,6 +40,23 @@ const formatTime = (seconds: number): string => {
     }
     return `${secs}s`;
 };
+
+const formatExpireTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+const expireProgressPercent = computed(() => {
+    const total = props.otpExpiresIn || 600;
+    return (otpExpireCountdown.value / total) * 100;
+});
+
+const expireColorClass = computed(() => {
+    if (otpExpireCountdown.value <= 60) return 'text-red-500'; // Last 1 minute
+    if (otpExpireCountdown.value <= 180) return 'text-orange-500'; // Last 3 minutes
+    return 'text-[#1b1b18]/70';
+});
 
 const startCountdown = (seconds: number) => {
     countdown.value = seconds;
@@ -48,6 +69,21 @@ const startCountdown = (seconds: number) => {
         } else {
             if (countdownInterval) {
                 clearInterval(countdownInterval);
+            }
+        }
+    }, 1000);
+};
+
+const startExpireCountdown = () => {
+    if (expireInterval) {
+        clearInterval(expireInterval);
+    }
+    expireInterval = setInterval(() => {
+        if (otpExpireCountdown.value > 0) {
+            otpExpireCountdown.value--;
+        } else {
+            if (expireInterval) {
+                clearInterval(expireInterval);
             }
         }
     }, 1000);
@@ -104,6 +140,8 @@ const resendOtp = () => {
         onSuccess: () => {
             remaining.value = Math.max(0, remaining.value - 1);
             startCountdown(currentCooldown.value);
+            // Reset OTP expire countdown
+            otpExpireCountdown.value = props.otpExpiresIn || 600;
             // Increase cooldown for next time
             const cooldowns = [30, 60, 120, 300, 300];
             const nextIndex = Math.min(5 - remaining.value, cooldowns.length - 1);
@@ -122,11 +160,16 @@ onMounted(() => {
     if (props.waitSeconds > 0) {
         startCountdown(props.waitSeconds);
     }
+    // Start OTP expire countdown
+    startExpireCountdown();
 });
 
 onUnmounted(() => {
     if (countdownInterval) {
         clearInterval(countdownInterval);
+    }
+    if (expireInterval) {
+        clearInterval(expireInterval);
     }
 });
 </script>
@@ -143,9 +186,29 @@ onUnmounted(() => {
                 <h1 class="mb-1 text-center text-[22px] font-bold text-[#1b1b18] sm:mb-2 sm:text-[28px]">
                     OTP Verification
                 </h1>
-                <p class="mb-6 text-center text-[13px] text-[#1b1b18]/70 sm:mb-8 sm:text-[14px]">
+                <p class="mb-4 text-center text-[13px] text-[#1b1b18]/70 sm:mb-6 sm:text-[14px]">
                     Please enter the Code that we has sent to your email address
                 </p>
+
+                <!-- OTP Expire Countdown -->
+                <div class="mb-6 rounded-xl bg-white/70 p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[12px] text-[#1b1b18]/60 sm:text-[13px]">Kode akan kadaluarsa dalam:</span>
+                        <span :class="['text-[14px] font-bold sm:text-[16px]', expireColorClass]">
+                            {{ isOtpExpired ? 'Expired!' : formatExpireTime(otpExpireCountdown) }}
+                        </span>
+                    </div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                        <div 
+                            class="h-full rounded-full transition-all duration-1000"
+                            :class="otpExpireCountdown <= 60 ? 'bg-red-500' : otpExpireCountdown <= 180 ? 'bg-orange-500' : 'bg-gradient-to-r from-[#8DD0FC] to-[#F4AFE9]'"
+                            :style="{ width: `${expireProgressPercent}%` }"
+                        ></div>
+                    </div>
+                    <p v-if="isOtpExpired" class="mt-2 text-center text-[12px] text-red-500">
+                        Kode OTP sudah kadaluarsa. Silakan kirim ulang kode baru.
+                    </p>
+                </div>
 
                 <form @submit.prevent="submit">
                     <div class="mb-8 flex justify-center gap-3">
@@ -169,10 +232,10 @@ onUnmounted(() => {
 
                     <button
                         type="submit"
-                        :disabled="form.processing || form.otp.length !== 6"
+                        :disabled="form.processing || form.otp.length !== 6 || isOtpExpired"
                         class="w-full rounded-xl bg-[#8DD0FC] py-3 text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
-                        {{ form.processing ? 'Verifying...' : 'Verify' }}
+                        {{ form.processing ? 'Verifying...' : isOtpExpired ? 'Code Expired' : 'Verify' }}
                     </button>
                 </form>
 

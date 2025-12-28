@@ -233,4 +233,76 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(HealthInsight::class);
     }
+
+    /**
+     * Get patients for this doctor (accepted relationships)
+     */
+    public function patients(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'doctor_id')->accepted();
+    }
+
+    /**
+     * Get all patient requests (pending)
+     */
+    public function patientRequests(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'doctor_id')->pending();
+    }
+
+    /**
+     * Get all doctor-patient relationships as doctor
+     */
+    public function doctorPatientRelations(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'doctor_id');
+    }
+
+    /**
+     * Get doctors for this patient (accepted relationships)
+     */
+    public function doctors(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'patient_id')->accepted();
+    }
+
+    /**
+     * Get pending doctor requests sent by this patient
+     */
+    public function pendingDoctorRequests(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'patient_id')->pending();
+    }
+
+    /**
+     * Get all doctor-patient relationships as patient
+     */
+    public function patientDoctorRelations(): HasMany
+    {
+        return $this->hasMany(DoctorPatient::class, 'patient_id');
+    }
+
+    /**
+     * Check if user has a specific doctor
+     */
+    public function hasDoctor(int $doctorId): bool
+    {
+        return $this->doctors()->where('doctor_id', $doctorId)->exists();
+    }
+
+    /**
+     * Check if user has pending request to a doctor
+     */
+    public function hasPendingRequestTo(int $doctorId): bool
+    {
+        return $this->pendingDoctorRequests()->where('doctor_id', $doctorId)->exists();
+    }
+
+    /**
+     * Get active doctor for this patient (first accepted)
+     */
+    public function getActiveDoctor(): ?DoctorPatient
+    {
+        return $this->doctors()->with('doctor')->first();
+    }
 }

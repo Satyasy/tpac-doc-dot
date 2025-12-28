@@ -106,4 +106,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/consultation/session/{session}/messages', [ChatController::class, 'getMessages']);
     Route::post('/consultation/session/{session}/message', [ChatController::class, 'sendMessage']);
     Route::delete('/consultation/session/{session}', [ChatController::class, 'deleteSession']);
+
+    // Doctor-Patient System
+    Route::prefix('doctor-patient')->group(function () {
+        // Patient endpoints
+        Route::get('/doctors', [\App\Http\Controllers\DoctorPatientController::class, 'getDoctors']);
+        Route::post('/request', [\App\Http\Controllers\DoctorPatientController::class, 'sendRequest']);
+        Route::get('/my-doctors', [\App\Http\Controllers\DoctorPatientController::class, 'getMyDoctors']);
+        Route::delete('/cancel/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'cancelRequest']);
+        Route::delete('/disconnect/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'disconnect']);
+
+        // Doctor endpoints
+        Route::get('/pending-requests', [\App\Http\Controllers\DoctorPatientController::class, 'getPendingRequests']);
+        Route::post('/accept/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'acceptRequest']);
+        Route::post('/reject/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'rejectRequest']);
+        Route::get('/my-patients', [\App\Http\Controllers\DoctorPatientController::class, 'getMyPatients']);
+        Route::get('/patient/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'getPatientDetail']);
+        Route::post('/patient/{doctorPatient}/mark-read', [\App\Http\Controllers\DoctorPatientController::class, 'markAlertsRead']);
+        Route::delete('/patient/{doctorPatient}', [\App\Http\Controllers\DoctorPatientController::class, 'removePatient']);
+    });
+
+    // Doctor Pages (for doctors only)
+    Route::get('/doctor/patients', function () {
+        $user = auth()->user();
+        if (!$user->hasRole('doctor')) {
+            abort(403);
+        }
+        return Inertia::render('Doctor/Patients');
+    })->name('doctor.patients');
 });

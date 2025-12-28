@@ -2,9 +2,14 @@
 
 Platform konsultasi kesehatan berbasis AI dengan fitur RAG (Retrieval-Augmented Generation), monitoring dokter-pasien, dan Mood Tracker.
 
-![Laravel](https://img.shields.io/badge/Laravel-12-red?logo=laravel)
-![Vue.js](https://img.shields.io/badge/Vue.js-3-green?logo=vue.js)
-![Tailwind](https://img.shields.io/badge/Tailwind-4-blue?logo=tailwindcss)
+![Laravel](https://img.shields.io/badge/laravel-%23FF2D20.svg?style=for-the-badge&logo=laravel&logoColor=white)
+![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)
+![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Filament](https://img.shields.io/badge/filament-%23FDAE4B.svg?style=for-the-badge&logo=filament&logoColor=black&logoSize=auto)
 
 ---
 
@@ -50,12 +55,12 @@ php artisan key:generate
 # 4. Buat database 'docdot' di phpMyAdmin/MySQL
 
 # 5. Edit .env - sesuaikan database & API keys
-# DB_DATABASE=docdot
-# DB_USERNAME=root
-# DB_PASSWORD=
-# GEMINI_API_KEY=your_key
-# PINECONE_API_KEY=your_key
-# PINECONE_HOST=your_host
+DB_DATABASE=docdot
+DB_USERNAME=root
+DB_PASSWORD=
+GEMINI_API_KEY=your_key
+PINECONE_API_KEY=your_key
+PINECONE_HOST=your_host
 
 # 6. Migrate & seed database
 php artisan migrate --seed
@@ -123,30 +128,15 @@ Admin Panel: http://localhost:8000/admin
 
 ---
 
-## Struktur Penting
-
-```
-app/
-├── Filament/          # Admin panel resources
-├── Http/Controllers/  # API & web controllers
-├── Models/            # Eloquent models
-├── Services/Rag/      # RAG service (AI)
-resources/js/
-├── components/        # Vue components
-├── Pages/             # Vue pages
-```
-
----
-
 ## Environment Variables
 
-| Variable | Deskripsi | Required |
-|----------|-----------|----------|
-| `DB_DATABASE` | Nama database | ✅ |
-| `GEMINI_API_KEY` | API key Gemini AI | ✅ |
-| `PINECONE_API_KEY` | API key Pinecone | ✅ |
-| `PINECONE_HOST` | Host Pinecone index | ✅ |
-| `MAIL_*` | Config email untuk OTP | ⚠️ |
+| Variable | Deskripsi |
+|----------|-----------|
+| `DB_DATABASE` | Nama database |
+| `GEMINI_API_KEY` | API key Gemini AI |
+| `PINECONE_API_KEY` | API key Pinecone | 
+| `PINECONE_HOST` | Host Pinecone index | 
+| `MAIL_*` | Config email untuk OTP | 
 
 ---
 
@@ -157,14 +147,14 @@ resources/js/
 composer run dev
 
 # Production
-npm run build         # Build frontend
+npm run build 
 
 # Database
-php artisan migrate              # Run migrations
-php artisan migrate:fresh --seed # Reset & seed
+php artisan migrate
+php artisan migrate:fresh --seed
 
 # Cache
-php artisan optimize:clear       # Clear all cache
+php artisan optimize:clear
 ```
 
 ---
@@ -175,6 +165,3 @@ php artisan optimize:clear       # Clear all cache
 
 ---
 
-## License
-
-MIT License

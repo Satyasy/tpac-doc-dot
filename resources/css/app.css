@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme inline {
+    --font-sans: Poppins, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Scroll Animation Classes */
+.scroll-animate {
+    opacity: 0;
+    transform: translateY(2rem);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-fade-in-up {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Staggered animation delays */
+.scroll-animate-delay-1 {
+    transition-delay: 0.1s;
+}
+
+.scroll-animate-delay-2 {
+    transition-delay: 0.2s;
+}
+
+.scroll-animate-delay-3 {
+    transition-delay: 0.3s;
+}
+
+.scroll-animate-delay-4 {
+    transition-delay: 0.4s;
+}
+
+.scroll-animate-delay-5 {
+    transition-delay: 0.5s;
+}

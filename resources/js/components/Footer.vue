@@ -59,12 +59,8 @@ import { Link } from '@inertiajs/vue3';
                         <h3 class="mb-3 text-[16px] font-bold text-[#1b1b18] sm:mb-4 sm:text-[18px] lg:text-[20px]">Kontak</h3>
                         <div class="space-y-1.5 text-[13px] text-[#1b1b18]/80 sm:space-y-2 sm:text-[14px]">
                             <p class="flex items-center gap-2">
-                                <Icon icon="mdi:phone" class="h-4 w-4" />
-                                +62 812-3456-7890
-                            </p>
-                            <p class="flex items-center gap-2">
                                 <Icon icon="mdi:email" class="h-4 w-4" />
-                                support@docdot.id
+                                vanpandega@gmail.com
                             </p>
                         </div>
                     </div>

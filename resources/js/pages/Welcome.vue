@@ -59,7 +59,7 @@ useScrollAnimation();
                                 <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5BA4D9]/20">
                                     <Icon icon="eos-icons:ai" class="h-8 w-8 text-[#2D7BB8]" />
                                 </div>
-                                <h3 class="text-[20px] font-bold text-[#1b1b18]">AI Consultation</h3>
+                                <h2 class="text-[20px] font-bold text-[#1b1b18]">AI Consultation</h2>
                                 <p class="mt-2 text-[14px] leading-relaxed text-[#1b1b18]/80">
                                     Konsultasikan keluhan penyakit Anda sekarang dan dapatkan solusi cepat dari DocDot, aman terpercaya.
                                 </p>
@@ -68,7 +68,7 @@ useScrollAnimation();
                                 <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/40">
                                     <Icon icon="fluent-mdl2:insights" class="h-8 w-8 text-[#2D7BB8]" />
                                 </div>
-                                <h3 class="text-[20px] font-bold text-[#1b1b18]">DocDot Insight</h3>
+                                <h2 class="text-[20px] font-bold text-[#1b1b18]">DocDot Insight</h2>
                                 <p class="mt-2 text-[14px] leading-relaxed text-[#1b1b18]/80">
                                     Temukan berbagai artikel kesehatan terpercaya dan terbaru hanya di DocDot, untuk hidup lebih sehat.
                                 </p>
@@ -85,10 +85,10 @@ useScrollAnimation();
                             </div>
                             <div class="mt-6 flex items-center">
                                 <div class="flex -space-x-8">
-                                    <img src="https://i.pravatar.cc/48?img=1" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
-                                    <img src="https://i.pravatar.cc/48?img=2" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
-                                    <img src="https://i.pravatar.cc/48?img=3" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
-                                    <img src="https://i.pravatar.cc/48?img=4" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
+                                    <img src="https://i.pravatar.cc/48?img=1" alt="Pengguna DocDot" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
+                                    <img src="https://i.pravatar.cc/48?img=2" alt="Pengguna DocDot" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
+                                    <img src="https://i.pravatar.cc/48?img=3" alt="Pengguna DocDot" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
+                                    <img src="https://i.pravatar.cc/48?img=4" alt="Pengguna DocDot" class="h-12 w-12 rounded-full border-2 border-white object-cover" />
                                 </div>
                                 <div class="-ml-4 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[14px] font-semibold text-[#1b1b18]">
                                     100+
@@ -105,14 +105,14 @@ useScrollAnimation();
                     <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#5BA4D9]/20">
                         <Icon icon="eos-icons:ai" class="h-5 w-5 text-[#2D7BB8]" />
                     </div>
-                    <h3 class="text-[14px] font-bold text-[#1b1b18]">AI Consultation</h3>
+                    <h2 class="text-[14px] font-bold text-[#1b1b18]">AI Consultation</h2>
                     <p class="mt-1 text-[11px] leading-relaxed text-[#1b1b18]/70">Konsultasi cepat dengan AI</p>
                 </div>
                 <div class="rounded-2xl bg-gradient-to-br from-[#DDB4F6]/20 to-[#8DD0FC]/20 p-4">
                     <div class="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/60">
                         <Icon icon="fluent-mdl2:insights" class="h-5 w-5 text-[#2D7BB8]" />
                     </div>
-                    <h3 class="text-[14px] font-bold text-[#1b1b18]">DocDot Insight</h3>
+                    <h2 class="text-[14px] font-bold text-[#1b1b18]">DocDot Insight</h2>
                     <p class="mt-1 text-[11px] leading-relaxed text-[#1b1b18]/70">Artikel kesehatan terpercaya</p>
                 </div>
             </div>

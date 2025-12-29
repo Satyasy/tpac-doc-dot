@@ -7,8 +7,8 @@ use Illuminate\Http\RedirectResponse;
 
 class LogoutResponse implements LogoutResponseContract
 {
-    public function toResponse($request): RedirectResponse
-    {
-        return redirect('/login');
-    }
+   public function toResponse($request): RedirectResponse
+   {
+      return redirect('/login');
+   }
 }

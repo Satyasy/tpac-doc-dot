@@ -214,6 +214,9 @@ const analyzeResults = async () => {
     
     isAnalyzing.value = false;
     showResult.value = true;
+    
+    // Auto-save to health dashboard when results are shown
+    await saveToHealthDashboard();
 };
 
 const saveToHealthDashboard = async () => {

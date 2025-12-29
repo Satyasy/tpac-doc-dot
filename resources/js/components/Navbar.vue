@@ -29,6 +29,7 @@ const currentPath = computed(() => page.url);
 const user = computed(() => page.props.auth?.user as User | null);
 const isVerified = computed(() => user.value?.email_verified_at !== null);
 const isDoctor = computed(() => user.value?.roles?.some(r => r.name === 'doctor') ?? false);
+const isAdmin = computed(() => user.value?.roles?.some(r => r.name === 'super_admin') ?? false);
 
 const showDropdown = ref(false);
 const showMobileMenu = ref(false);
@@ -190,6 +191,15 @@ const toggleMobileMenu = () => {
                                     <Icon icon="mdi:account-outline" class="h-4 w-4" />
                                     Profile
                                 </Link>
+                                <a 
+                                    v-if="isAdmin"
+                                    href="/admin" 
+                                    class="flex items-center gap-2 px-4 py-2 text-[14px] text-[#1b1b18] transition-colors hover:bg-purple-100"
+                                    @click="showDropdown = false"
+                                >
+                                    <Icon icon="mdi:shield-crown" class="h-4 w-4 text-purple-600" />
+                                    <span class="text-purple-600 font-medium">Admin Panel</span>
+                                </a>
                                 <Link 
                                     href="/health-dashboard" 
                                     class="flex items-center gap-2 px-4 py-2 text-[14px] text-[#1b1b18] transition-colors hover:bg-[#43B3FC]/20"
@@ -320,6 +330,15 @@ const toggleMobileMenu = () => {
                         <Icon icon="mdi:account-outline" class="h-5 w-5" />
                         Profile
                     </Link>
+                    <a 
+                        v-if="isAdmin"
+                        href="/admin" 
+                        @click="showMobileMenu = false"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3 text-[16px] text-purple-600 font-medium transition-colors hover:bg-purple-50"
+                    >
+                        <Icon icon="mdi:shield-crown" class="h-5 w-5" />
+                        Admin Panel
+                    </a>
                     <Link 
                         href="/health-dashboard" 
                         @click="showMobileMenu = false"

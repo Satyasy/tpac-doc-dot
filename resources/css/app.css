@@ -9,6 +9,37 @@
     --font-sans: Poppins, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* ========================================
+   Global Cursor Pointer for Interactive Elements
+   ======================================== */
+button,
+[type='button'],
+[type='submit'],
+[type='reset'],
+[role='button'],
+a,
+select,
+label[for],
+input[type='checkbox'],
+input[type='radio'],
+input[type='file'],
+.clickable,
+[onclick],
+[tabindex]:not([tabindex='-1']) {
+    cursor: pointer;
+}
+
+/* Disabled elements should have not-allowed cursor */
+button:disabled,
+[type='button']:disabled,
+[type='submit']:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+.disabled {
+    cursor: not-allowed;
+}
+
 /* Scroll Animation Classes */
 .scroll-animate {
     opacity: 0;

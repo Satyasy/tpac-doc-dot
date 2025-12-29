@@ -30,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('DocDot Admin')
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('3rem')

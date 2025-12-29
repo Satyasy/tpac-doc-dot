@@ -56,5 +56,11 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Admin: admin@docdot.com / password');
         $this->command->info('- Doctor: doctor@docdot.com / password');
         $this->command->info('- User: user@docdot.com / password');
+
+        // Call other seeders
+        $this->call([
+            DrugSeeder::class,
+            HealthArticleSeeder::class,
+        ]);
     }
 }

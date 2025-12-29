@@ -57,9 +57,18 @@ echo ========================================
 echo.
 echo Langkah selanjutnya:
 echo 1. Buat database 'docdot' di MySQL
-echo 2. Edit file .env (isi API keys)
+echo 2. Edit file .env (isi API keys: GEMINI, PINECONE)
 echo 3. Jalankan: php artisan migrate --seed
 echo 4. Jalankan: php artisan serve
+echo.
+echo === Redis (Opsional tapi Recommended) ===
+echo Untuk performa lebih baik, install Redis:
+echo - Windows: Download https://github.com/microsoftarchive/redis/releases
+echo - Atau pakai Docker: docker run -d -p 6379:6379 redis:7-alpine
+echo.
+echo Jika tidak pakai Redis, edit .env:
+echo   SESSION_DRIVER=database
+echo   CACHE_STORE=database
 echo.
 echo Buka http://localhost:8000
 echo.

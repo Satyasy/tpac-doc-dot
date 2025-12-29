@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Drug;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -34,13 +35,8 @@ class DrugController extends Controller
          $query->where('pregnancy_safe', (bool) $request->input('pregnancy_safe'));
       }
 
-      // Get all unique categories - cached for 10 minutes
-      $categories = cache()->remember('drug_categories', 600, function () {
-         return Drug::select('category')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category');
-      });
+      // Get all unique categories - cached with Redis
+      $categories = CacheService::drugCategories();
 
       // Paginate results
       $drugs = $query->orderBy('name')
@@ -69,11 +65,8 @@ class DrugController extends Controller
          }
       ]);
 
-      // Get related drugs from same category
-      $relatedDrugs = Drug::where('category', $drug->category)
-         ->where('id', '!=', $drug->id)
-         ->limit(4)
-         ->get();
+      // Get related drugs from same category - cached with Redis
+      $relatedDrugs = CacheService::relatedDrugs($drug->category, $drug->id);
 
       return Inertia::render('DrugDetail', [
          'drug' => $drug,

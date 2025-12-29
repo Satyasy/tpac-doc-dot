@@ -119,12 +119,50 @@ Admin Panel: http://localhost:8000/admin
 - Spatie Permission (Role Management)
 - Gemini AI (LLM)
 - Pinecone (Vector Database)
+- Redis (Cache & Sessions)
 
 **Frontend:**
 - Vue 3 + TypeScript
 - Inertia.js
 - Tailwind CSS 4
 - Iconify
+
+---
+
+## 🔴 Redis Cache
+
+Aplikasi ini menggunakan **Redis** untuk caching dan sessions agar performa lebih cepat.
+
+### Fitur yang di-cache:
+| Data | TTL | Keterangan |
+|------|-----|------------|
+| Kategori Obat | 10 menit | Jarang berubah |
+| Related Drugs | 5 menit | Per kategori |
+| Featured Article | 5 menit | Halaman utama |
+| Popular Articles | 5 menit | Halaman utama |
+| Kategori Artikel | 10 menit | Jarang berubah |
+| Daftar Dokter | 1 menit | Role-based |
+
+### Cache Commands:
+```bash
+# Lihat statistik cache
+php artisan cache:stats
+
+# Clear semua cache
+php artisan cache:stats --clear
+
+# Laravel cache commands
+php artisan cache:clear
+php artisan config:clear
+php artisan optimize:clear
+```
+
+### Jika tidak pakai Redis:
+Edit `.env` - ubah ke database:
+```env
+SESSION_DRIVER=database
+CACHE_STORE=database
+```
 
 ---
 
@@ -136,6 +174,9 @@ Admin Panel: http://localhost:8000/admin
 | `GEMINI_API_KEY` | API key Gemini AI |
 | `PINECONE_API_KEY` | API key Pinecone | 
 | `PINECONE_HOST` | Host Pinecone index | 
+| `REDIS_HOST` | Redis server (default: 127.0.0.1) |
+| `CACHE_STORE` | Cache driver (redis/database) |
+| `SESSION_DRIVER` | Session driver (redis/database) |
 | `MAIL_*` | Config email untuk OTP | 
 
 ---
@@ -154,8 +195,22 @@ php artisan migrate
 php artisan migrate:fresh --seed
 
 # Cache
-php artisan optimize:clear
+php artisan cache:stats          # Lihat statistik
+php artisan cache:stats --clear  # Clear all cache
+php artisan optimize:clear       # Clear all Laravel cache
 ```
+
+---
+
+## Docker Services
+
+| Service | Port | Deskripsi |
+|---------|------|-----------|
+| app | 8000 | Laravel + PHP |
+| mysql | 3307 | Database MySQL 8 |
+| redis | 6379 | Cache & Sessions |
+| phpmyadmin | 8080 | Database GUI |
+| redisinsight | 5540 | Redis GUI |
 
 ---
 

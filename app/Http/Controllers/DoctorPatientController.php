@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DoctorPatient;
 use App\Models\User;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,21 +26,8 @@ class DoctorPatientController extends Controller
             ->toArray();
       }
 
-      $doctors = User::role('doctor')
-         ->select('id', 'name', 'email')
-         ->whereNotIn('id', $existingDoctorIds)
-         ->with('profile:user_id,photo_profile')
-         ->get()
-         ->map(function ($doctor) {
-            return [
-               'id' => $doctor->id,
-               'name' => $doctor->name,
-               'email' => $doctor->email,
-               'profile' => $doctor->profile ? [
-                  'photo_profile' => $doctor->profile->photo_profile,
-               ] : null,
-            ];
-         });
+      // Get doctors list - cached with Redis
+      $doctors = CacheService::doctorsList($existingDoctorIds);
 
       return response()->json(['doctors' => $doctors]);
    }

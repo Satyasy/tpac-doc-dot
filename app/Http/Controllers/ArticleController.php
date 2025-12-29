@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\HealthArticle;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -36,35 +37,14 @@ class ArticleController extends Controller
          ->paginate(12)
          ->withQueryString();
 
-      // Get featured article (latest) - cached for 5 minutes
-      $featuredArticle = cache()->remember('featured_article', 300, function () {
-         return HealthArticle::where('verified', true)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
-            ->orderBy('published_at', 'desc')
-            ->first();
-      });
+      // Get featured article - cached with Redis
+      $featuredArticle = CacheService::featuredArticle();
 
-      // Get popular articles (recent ones, cached)
-      $popularArticles = cache()->remember('popular_articles', 300, function () {
-         return HealthArticle::where('verified', true)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
-            ->orderBy('published_at', 'desc')
-            ->skip(1)
-            ->take(3)
-            ->get();
-      });
+      // Get popular articles - cached with Redis
+      $popularArticles = CacheService::popularArticles(3);
 
-      // Get categories with counts - cached for 10 minutes
-      $categories = cache()->remember('article_categories', 600, function () {
-         return HealthArticle::where('verified', true)
-            ->whereNotNull('published_at')
-            ->selectRaw('category, count(*) as count')
-            ->groupBy('category')
-            ->pluck('count', 'category')
-            ->toArray();
-      });
+      // Get categories with counts - cached with Redis
+      $categories = CacheService::articleCategories();
 
       return Inertia::render('Article', [
          'articles' => $articles,
@@ -81,20 +61,19 @@ class ArticleController extends Controller
     */
    public function show(string $slug)
    {
+      // Get article (not cached because needs 404 handling)
       $article = HealthArticle::where('slug', $slug)
          ->where('verified', true)
          ->whereNotNull('published_at')
          ->where('published_at', '<=', now())
          ->firstOrFail();
 
-      // Get related articles
-      $relatedArticles = HealthArticle::where('verified', true)
-         ->whereNotNull('published_at')
-         ->where('published_at', '<=', now())
-         ->where('id', '!=', $article->id)
-         ->where('category', $article->category)
-         ->take(3)
-         ->get();
+      // Get related articles - cached with Redis
+      $relatedArticles = CacheService::relatedArticles(
+         $article->category,
+         $article->id,
+         3
+      );
 
       return Inertia::render('ArticleDetail', [
          'article' => $article,

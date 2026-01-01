@@ -5,8 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="DocDot - Konsultasikan keluhan kesehatan Anda dengan AI terpercaya. Dapatkan informasi obat, artikel kesehatan, dan tracking kondisi fisik & mental Anda. Gratis 24 jam.">
-    <meta name="keywords" content="kesehatan, konsultasi dokter, AI kesehatan, informasi obat, artikel kesehatan, tracking kesehatan, DocDot">
+    <meta name="description"
+        content="DocDot - Konsultasikan keluhan kesehatan Anda dengan AI terpercaya. Dapatkan informasi obat, artikel kesehatan, dan tracking kondisi fisik & mental Anda. Gratis 24 jam.">
+    <meta name="keywords"
+        content="kesehatan, konsultasi dokter, AI kesehatan, informasi obat, artikel kesehatan, tracking kesehatan, DocDot">
     <meta name="author" content="DocDot">
 
     <title inertia>{{ config('app.name', 'DocDot') }}</title>

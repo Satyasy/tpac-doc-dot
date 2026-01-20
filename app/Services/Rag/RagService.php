@@ -112,20 +112,23 @@ class RagService
             }
         }
 
-        // 2. Navigasi / Fitur aplikasi
+        // 2. Cek apakah user meminta saran/analisis berdasarkan data personal (mood, health tracking)
+        // Ini harus dicek SEBELUM navigation check
+        if ($this->isPersonalHealthDataQuery($message)) {
+            return 'personal_health_advice';
+        }
+
+        // 3. Navigasi / Fitur aplikasi (hanya jika bukan health query)
         $navigation = [
             'fitur',
-            'cara',
-            'bagaimana',
-            'apa saja',
-            'bisa apa',
+            'cara pakai',
+            'apa saja fitur',
+            'bisa apa saja',
             'menu',
-            'tracking',
-            'track',
-            'riwayat',
-            'history',
             'bantuan',
-            'help'
+            'help',
+            'cara kerja',
+            'tutorial'
         ];
         foreach ($navigation as $nav) {
             if (str_contains($message, $nav) && !$this->containsHealthKeyword($message)) {
@@ -133,8 +136,71 @@ class RagService
             }
         }
 
-        // 3. Di luar konteks kesehatan
-        $offTopic = [
+        // 4. Di luar konteks kesehatan - dengan deteksi lebih baik
+        if ($this->isOffTopicQuery($message)) {
+            return 'off_topic';
+        }
+
+        // Default: health question
+        return 'health';
+    }
+
+    /**
+     * Check if message is asking for personal health advice based on tracked data
+     */
+    private function isPersonalHealthDataQuery(string $message): bool
+    {
+        $personalDataKeywords = [
+            'mood saya',
+            'tracking mood',
+            'mood tracking',
+            'health tracking',
+            'tracking saya',
+            'data saya',
+            'berdasarkan tracking',
+            'berdasarkan data',
+            'stress saya',
+            'tidur saya',
+            'aktivitas saya',
+            'kondisi saya',
+            'skor saya',
+            'rata-rata saya',
+            'riwayat mood',
+            'riwayat kesehatan',
+            'hasil tracking',
+            'data tracking',
+        ];
+
+        // Juga cek pattern yang menunjukkan user sharing personal data
+        $personalDataPatterns = [
+            '/mood\s*:?\s*\d+\s*\/\s*\d+/i',           // mood 1/5 atau mood: 1/5
+            '/stress\s*:?\s*\d+\s*\/\s*\d+/i',         // stress 5/5
+            '/tidur\s*:?\s*\d+\s*(jam|hours?)/i',      // tidur 6 jam
+            '/skor\s*(rata-rata|average)?\s*:?\s*\d+/i', // skor rata-rata: 2
+            '/perasaan\s*:?\s*(sad|sedih|happy|senang|cemas|anxious)/i', // perasaan: sad
+        ];
+
+        foreach ($personalDataKeywords as $keyword) {
+            if (str_contains($message, $keyword)) {
+                return true;
+            }
+        }
+
+        foreach ($personalDataPatterns as $pattern) {
+            if (preg_match($pattern, $message)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if message is off-topic (not health related)
+     */
+    private function isOffTopicQuery(string $message): bool
+    {
+        $offTopicKeywords = [
             'cuaca',
             'weather',
             'politik',
@@ -146,16 +212,51 @@ class RagService
             'musik',
             'resep masakan',
             'programming',
-            'coding'
+            'coding',
+            'bahasa korea',
+            'bahasa jepang',
+            'bahasa mandarin',
+            'bahasa inggris',
+            'bahasa arab',
+            'translate',
+            'terjemahkan',
+            'artinya apa',
+            'apa artinya',
+            'lirik lagu',
+            'berita',
+            'gosip',
+            'drama',
+            'anime',
+            'crypto',
+            'bitcoin',
+            'saham',
+            'forex',
+            'matematika',
+            'fisika',
+            'kimia',
+            'sejarah',
+            'geografi',
+            'agama',
+            'hukum',
         ];
-        foreach ($offTopic as $topic) {
+
+        foreach ($offTopicKeywords as $topic) {
             if (str_contains($message, $topic)) {
-                return 'off_topic';
+                return true;
             }
         }
 
-        // Default: health question
-        return 'health';
+        // Deteksi pattern terjemahan: "bahasa X nya Y" atau "Y bahasa X"
+        if (preg_match('/bahasa\s*[a-z]+\s*(nya|dari|ke|dalam)/i', $message)) {
+            return true;
+        }
+
+        // Deteksi "X nya apa dalam bahasa Y" atau sejenisnya
+        if (preg_match('/(apa|gimana|bagaimana).*bahasa\s*[a-z]+/i', $message)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -164,6 +265,7 @@ class RagService
     private function containsHealthKeyword(string $message): bool
     {
         $healthKeywords = [
+            // Physical health
             'sakit',
             'nyeri',
             'demam',
@@ -182,7 +284,37 @@ class RagService
             'diagnosis',
             'terapi',
             'diet',
-            'nutrisi'
+            'nutrisi',
+            'alergi',
+            'infeksi',
+            'luka',
+            'patah',
+            'bengkak',
+            // Mental health
+            'mood',
+            'stress',
+            'stres',
+            'cemas',
+            'anxiety',
+            'depresi',
+            'depression',
+            'tidur',
+            'insomnia',
+            'mental',
+            'psikolog',
+            'psikiater',
+            'sedih',
+            'sad',
+            'bahagia',
+            'happy',
+            'emosi',
+            'perasaan',
+            'burnout',
+            'panik',
+            'trauma',
+            'ptsd',
+            'bipolar',
+            'overthinking',
         ];
 
         foreach ($healthKeywords as $keyword) {
@@ -255,6 +387,67 @@ class RagService
     }
 
     /**
+     * Generate personalized health advice based on user's tracked data
+     */
+    private function generatePersonalHealthAdvice(string $question, string $userRole = 'patient', ?string $userName = null): string
+    {
+        $nameGreeting = $userName ? "**{$userName}**" : 'Anda';
+
+        $systemPrompt = <<<PROMPT
+Kamu adalah asisten kesehatan mental DocDot yang berempati dan suportif.
+
+NAMA USER: {$nameGreeting}
+
+TUGAS:
+User telah membagikan data tracking mood/kesehatan mereka. Berikan saran yang SPESIFIK dan PERSONAL berdasarkan data yang mereka berikan dalam pesan.
+
+ATURAN PENTING:
+1. FOKUS pada data yang user berikan (mood score, stress level, jam tidur, aktivitas, perasaan)
+2. Berikan saran KONKRET dan ACTIONABLE yang bisa dilakukan HARI INI
+3. Gunakan bahasa yang hangat, empatik, dan suportif
+4. Jangan memberikan diagnosis klinis
+5. Untuk kondisi serius (mood ≤2/5 atau stress ≥4/5), SELALU sarankan konsultasi profesional
+6. Pertimbangkan korelasi antar data (misal: tidur kurang + stress tinggi)
+
+FORMAT RESPONS:
+1. 💭 **Pemahaman** - Akui dan validasi kondisi user berdasarkan data mereka
+2. 🔍 **Analisis Singkat** - Jelaskan apa yang mungkin terjadi dan korelasi antar data
+3. 💡 **Saran Praktis** - 3-5 tips konkret yang bisa dilakukan:
+   - Untuk tidur kurang: saran sleep hygiene
+   - Untuk stress tinggi: teknik relaksasi cepat
+   - Untuk mood rendah: aktivitas mood booster
+   - Untuk aktivitas work: saran work-life balance
+4. 🌟 **Motivasi** - Kata-kata penyemangat yang personal
+5. ⚠️ **Catatan Penting** - Jika kondisi serius, sarankan bantuan profesional
+
+CONTOH RESPONS YANG BAIK untuk Mood 1/5, Stress 5/5, Tidur 6 jam:
+"Hai {$nameGreeting}, saya melihat hari ini cukup berat untuk Anda... 💙
+
+💭 **Pemahaman**
+Dengan mood 1/5 dan stress 5/5, ditambah tidur hanya 6 jam, tubuh dan pikiran Anda pasti sedang kelelahan...
+
+🔍 **Yang Mungkin Terjadi**
+Kurang tidur dapat memperburuk stress dan menurunkan mood. Aktivitas kerja yang intens juga berkontribusi...
+
+💡 **Yang Bisa Anda Lakukan Hari Ini**
+1. **Istirahat mikro** - Ambil 5 menit setiap jam untuk bernapas dalam
+2. **Hidrasi** - Minum air putih, dehidrasi memperburuk stress
+3. **Jalan kaki singkat** - 10 menit di luar ruangan jika memungkinkan
+4. **Tidur lebih awal** - Targetkan 7-8 jam malam ini
+5. **Batasi kafein** - Hindari kopi setelah jam 2 siang
+
+🌟 **Ingat**
+Perasaan ini tidak akan selamanya. Anda sudah hebat mau memantau kondisi Anda!
+
+⚠️ **Penting**
+Jika perasaan ini berlanjut lebih dari 2 minggu, pertimbangkan untuk berbicara dengan psikolog atau konselor profesional."
+
+PROMPT;
+
+        return $this->llmService->generate($question, $systemPrompt);
+    }
+
+    /**
      * Query the RAG system with intent detection
      */
     public function query(string $question, int $topK = 5, ?array $filter = null, ?string $userRole = 'patient', ?string $userName = null): array
@@ -287,6 +480,16 @@ class RagService
                 'sources' => [],
                 'context_count' => 0,
                 'intent' => 'off_topic',
+            ];
+        }
+
+        // Handle personal health advice (mood tracking, health data)
+        if ($intent === 'personal_health_advice') {
+            return [
+                'answer' => $this->generatePersonalHealthAdvice($question, $userRole, $userName),
+                'sources' => [],
+                'context_count' => 0,
+                'intent' => 'personal_health_advice',
             ];
         }
 
